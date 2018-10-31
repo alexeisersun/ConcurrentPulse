@@ -15,4 +15,5 @@
 #define CONPULSE_ECHO_DURATION 10
 #define CONPULSE_TIMEOUT       3000
 
+#define CONPULSE_NUM_SENSORS   8
 #endif
