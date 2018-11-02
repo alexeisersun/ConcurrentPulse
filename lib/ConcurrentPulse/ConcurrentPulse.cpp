@@ -1,11 +1,7 @@
 #include "ConcurrentPulse.h"
 
-void getDistances(double (* buffer)[CONPULSE_NUM_SENSORS], byte enabled_mask)
+void getDistances(double (* buffer)[CONPULSE_NUM_SENSORS], byte mask)
 {
-    double pulse_time;
-    byte current_mask = 0;
-    byte mask = 0b11111111 & enabled_mask;
-
     // send a LOW pulse, then a HIGH, then a LOW
     CONPULSE_TRIG_PORTR &= ~mask;
     delayMicroseconds(CONPULSE_TRIG_DURATION);
@@ -14,39 +10,53 @@ void getDistances(double (* buffer)[CONPULSE_NUM_SENSORS], byte enabled_mask)
     CONPULSE_TRIG_PORTR &= ~mask;
 
     // register when the pulse was sent
+    double pulse_time;
     pulse_time = micros();
+    
+    // register for all incoming HIGH signals
+    byte high_sig = 0;
 
-    // each active sensor is set to 0 when the trigger signal is sent
-    // and set to 1 when the echo arrives.
-    // get the distances for all active sensors
-    byte high_sig = ~mask;
-    byte low_sig = ~mask;
+    // register for all incoming LOW signals
+    byte low_sig = 0;
 
-    while (~(low_sig | ~mask) & mask && (micros() - pulse_time) <= CONPULSE_TIMEOUT)
+    // buffer for values from echo pins.
+    // the inactive sensors are neglected.
+    byte pin_buffer = ~mask;
+
+    // get the distances for all active sensors.
+    // exit when all active sensors receive signals back or when timeout is exceeded.
+    while ((low_sig & mask) != mask && (micros() - pulse_time) <= CONPULSE_TIMEOUT)
     {
         // wait till a response is aquired, no matter where from
-        while ((CONPULSE_ECHO_PINR & mask) == current_mask && (micros() - pulse_time) <= CONPULSE_TIMEOUT)
+        while ((CONPULSE_ECHO_PINR & mask) == pin_buffer && (micros() - pulse_time) <= CONPULSE_TIMEOUT)
             ;
         byte pins = CONPULSE_ECHO_PINR;
-        byte mask_changes = current_mask ^ pins;
+        
+        byte pin_changes = (pin_buffer ^ pins) & mask;
         
         byte tmp_low_sig = low_sig;
-        low_sig = (~pins & high_sig) | ~mask;
-        
-        high_sig |= mask_changes;
-        current_mask |= mask_changes;
-        
-        byte mask_index = CONPULSE_NUM_SENSORS - 1;
-        byte empty_bit = 0;
+
+        // register a LOW value only when it was already a HIGH one
+        low_sig = (~pins & high_sig);
+
+        // check what values are new in `low_sig`
         byte low_sig_trigger = low_sig ^ tmp_low_sig;
-        // write pulse time to buffer
+
+        // register a HIGH value when it arrives for the first time
+        high_sig |= pin_changes;
+
+        pin_buffer = pins;
+        
+        // write timestamps for each bit that changed in `low_sig`
+        byte mask_index = 0;
+        byte last_bit = 0;
         while (1)
         {
             if (!low_sig_trigger) break;
-            empty_bit = low_sig_trigger & 0b00000001;
+            last_bit = low_sig_trigger & 0b00000001;
             low_sig_trigger >>= 1;
-            if (!empty_bit) (*buffer)[mask_index] = micros() - pulse_time;
-            --mask_index;
+            if (!last_bit) (*buffer)[mask_index] = micros() - pulse_time;
+            ++mask_index;
         }
     }
 }
