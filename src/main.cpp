@@ -10,7 +10,7 @@ void setup() {
 
 void loop() {
   delay(1000);
-  getDistances(&buffer, 0b11111111);
+  getDistances(&buffer, 0b00000001);
   
   for(int i = 0; i < CONPULSE_NUM_SENSORS; i++)
   {

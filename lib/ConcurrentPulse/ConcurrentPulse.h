@@ -6,5 +6,6 @@
 
 void setupDistanceSensors();
 void getDistances(double (*buffer)[CONPULSE_NUM_SENSORS], byte mask);
+void flushBuffer(double (* buffer)[CONPULSE_NUM_SENSORS]);
 
 #endif

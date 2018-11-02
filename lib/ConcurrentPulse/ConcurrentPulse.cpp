@@ -2,6 +2,8 @@
 
 void getDistances(double (* buffer)[CONPULSE_NUM_SENSORS], byte mask)
 {
+    flushBuffer(buffer);
+    
     // send a LOW pulse, then a HIGH, then a LOW
     CONPULSE_TRIG_PORTR &= ~mask;
     delayMicroseconds(CONPULSE_TRIG_DURATION);
@@ -31,7 +33,6 @@ void getDistances(double (* buffer)[CONPULSE_NUM_SENSORS], byte mask)
         while ((CONPULSE_ECHO_PINR & mask) == pin_buffer && (micros() - pulse_time) <= CONPULSE_TIMEOUT)
             ;
         byte pins = CONPULSE_ECHO_PINR;
-        
         byte pin_changes = (pin_buffer ^ pins) & mask;
         
         byte tmp_low_sig = low_sig;
@@ -55,7 +56,7 @@ void getDistances(double (* buffer)[CONPULSE_NUM_SENSORS], byte mask)
             if (!low_sig_trigger) break;
             last_bit = low_sig_trigger & 0b00000001;
             low_sig_trigger >>= 1;
-            if (!last_bit) (*buffer)[mask_index] = micros() - pulse_time;
+            if (last_bit) (*buffer)[mask_index] = micros() - pulse_time;
             ++mask_index;
         }
     }
@@ -68,8 +69,9 @@ void setupDistanceSensors()
 
     // set echo port to INPUT
     CONPULSE_ECHO_DDR = 0b00000000;
+}
 
-    // flush old values for trigger and echo ports
-    CONPULSE_TRIG_PORTR = 0b00000000;
-    CONPULSE_ECHO_PORTR = 0b00000000;
+void flushBuffer(double (* buffer)[CONPULSE_NUM_SENSORS]){
+    for (int i = 0; i < CONPULSE_NUM_SENSORS; ++i)
+        (*buffer)[i] = -1;
 }
