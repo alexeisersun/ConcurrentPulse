@@ -5,6 +5,6 @@
 #include "ConcurrentPulseSettings.h"
 
 void setupDistanceSensors();
-void getDistances(double buffer[], byte mask);
+void getDistances(double (*buffer)[CONPULSE_NUM_SENSORS], byte mask);
 
 #endif

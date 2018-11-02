@@ -1,6 +1,6 @@
 #include "ConcurrentPulse.h"
 
-void getDistances(double buffer[], byte enabled_mask)
+void getDistances(double (* buffer)[CONPULSE_NUM_SENSORS], byte enabled_mask)
 {
     double pulse_time;
     byte current_mask = 0;
@@ -19,19 +19,19 @@ void getDistances(double buffer[], byte enabled_mask)
     // each active sensor is set to 0 when the trigger signal is sent
     // and set to 1 when the echo arrives.
     // get the distances for all active sensors
-    byte high_sig = 0;
-    byte low_sig = 0;
+    byte high_sig = ~mask;
+    byte low_sig = ~mask;
 
-    while (current_mask | ~mask != 0b11111111 && (micros() - pulse_time) <= CONPULSE_TIMEOUT)
+    while (~(low_sig | ~mask) & mask && (micros() - pulse_time) <= CONPULSE_TIMEOUT)
     {
         // wait till a response is aquired, no matter where from
-        while (CONPULSE_ECHO_PINR & mask == current_mask && (micros() - pulse_time) <= CONPULSE_TIMEOUT)
+        while ((CONPULSE_ECHO_PINR & mask) == current_mask && (micros() - pulse_time) <= CONPULSE_TIMEOUT)
             ;
         byte pins = CONPULSE_ECHO_PINR;
         byte mask_changes = current_mask ^ pins;
         
         byte tmp_low_sig = low_sig;
-        low_sig = ~pins & high_sig;
+        low_sig = (~pins & high_sig) | ~mask;
         
         high_sig |= mask_changes;
         current_mask |= mask_changes;
@@ -45,7 +45,7 @@ void getDistances(double buffer[], byte enabled_mask)
             if (!low_sig_trigger) break;
             empty_bit = low_sig_trigger & 0b00000001;
             low_sig_trigger >>= 1;
-            if (!empty_bit) buffer[mask_index] = micros() - pulse_time;
+            if (!empty_bit) (*buffer)[mask_index] = micros() - pulse_time;
             --mask_index;
         }
     }
