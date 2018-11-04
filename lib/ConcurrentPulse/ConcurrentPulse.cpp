@@ -1,6 +1,6 @@
 #include "ConcurrentPulse.h"
 
-void getDistances(double (* buffer)[CONPULSE_NUM_SENSORS], byte mask)
+void getDistances(struct PulseData (* buffer)[CONPULSE_NUM_SENSORS], byte mask)
 {
     flushBuffer(buffer);
     
@@ -12,7 +12,7 @@ void getDistances(double (* buffer)[CONPULSE_NUM_SENSORS], byte mask)
     CONPULSE_TRIG_PORTR &= ~mask;
 
     // register when the pulse was sent
-    double pulse_time;
+    uint32_t pulse_time;
     pulse_time = micros();
     
     // register for all incoming HIGH signals
@@ -56,7 +56,7 @@ void getDistances(double (* buffer)[CONPULSE_NUM_SENSORS], byte mask)
             if (!low_sig_trigger) break;
             last_bit = low_sig_trigger & 0b00000001;
             low_sig_trigger >>= 1;
-            if (last_bit) (*buffer)[mask_index] = micros() - pulse_time;
+            if (last_bit) (*buffer)[mask_index] = {mask_index, micros() - pulse_time};
             ++mask_index;
         }
     }
@@ -71,7 +71,9 @@ void setupDistanceSensors()
     CONPULSE_ECHO_DDR = 0b00000000;
 }
 
-void flushBuffer(double (* buffer)[CONPULSE_NUM_SENSORS]){
+void flushBuffer(struct PulseData (* buffer)[CONPULSE_NUM_SENSORS]){
     for (int i = 0; i < CONPULSE_NUM_SENSORS; ++i)
-        (*buffer)[i] = -1;
+    {
+        (*buffer)[i] = {0, 0};
+    }
 }

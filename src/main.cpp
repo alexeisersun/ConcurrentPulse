@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include <ConcurrentPulse.h>
 
-double buffer[CONPULSE_NUM_SENSORS];
+struct PulseData buffer[CONPULSE_NUM_SENSORS];
 
 void setup() {
   Serial.begin(9600);
@@ -14,7 +14,9 @@ void loop() {
   
   for(int i = 0; i < CONPULSE_NUM_SENSORS; i++)
   {
-    Serial.println(buffer[i]);
+    Serial.print(buffer[i].index);
+    Serial.print(' ');
+    Serial.println(buffer[i].distance);
   }
   
   Serial.println();
