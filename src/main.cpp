@@ -2,15 +2,15 @@
 #include <ConcurrentPulse.h>
 
 struct PulseData buffer[CONPULSE_NUM_SENSORS];
-
+uint8_t sensor_mask = 0b00000001;
 void setup() {
   Serial.begin(9600);
-  setupDistanceSensors();
+  setupDistanceSensors(sensor_mask);
 }
 
 void loop() {
   delay(1000);
-  getDistances(&buffer, 0b00000001);
+  getDistances(&buffer, sensor_mask);
   
   for(int i = 0; i < CONPULSE_NUM_SENSORS; i++)
   {

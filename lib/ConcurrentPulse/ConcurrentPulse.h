@@ -9,8 +9,8 @@ struct PulseData {
     uint32_t distance;
 };
 
-void setupDistanceSensors();
-void getDistances(struct PulseData (*buffer)[CONPULSE_NUM_SENSORS], byte mask);
+void setupDistanceSensors(uint8_t pin_mask);
+void getDistances(struct PulseData (*buffer)[CONPULSE_NUM_SENSORS], uint8_t pin_mask);
 void flushBuffer(struct PulseData (* buffer)[CONPULSE_NUM_SENSORS]);
 
 #endif
