@@ -52,13 +52,13 @@ void getDistances(struct PulseData (*buffer)[CONPULSE_NUM_SENSORS], uint8_t pin_
         for (uint8_t i = 0; pin_changes; ++i)
         {
             // skip unnecessary computations when no change on the given pin
-            if (~(pin_changes & (1 << i)))
+            if ((pin_changes & (1 << i)) == 0)
                 continue;
 
             // register the start of the pulse
             if (high_sig_trigger & pin_changes & (1 << i))
             {
-                (*buffer)[i] = {(uint8_t)(0b00000001 << i), micros()};
+                (*buffer)[i] = {i, micros()};
             }
 
             // register the end of the pulse
