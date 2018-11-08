@@ -2,7 +2,7 @@
 #include <ConcurrentPulse.h>
 
 struct PulseData buffer[CONPULSE_NUM_SENSORS];
-uint8_t sensor_mask = 0b00000001;
+uint8_t sensor_mask = 0b00001111;
 void setup() {
   Serial.begin(9600);
   setupDistanceSensors(sensor_mask);
@@ -16,7 +16,7 @@ void loop() {
   {
     Serial.print(buffer[i].index);
     Serial.print(' ');
-    Serial.println(buffer[i].distance);
+    Serial.println(buffer[i].distance / 58);
   }
   
   Serial.println();
